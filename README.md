@@ -2,16 +2,20 @@
 
 **A dictionary data structure allowing for many-to-one, one-to-many and many-to-many relationships.**
 
-These, along with the ordinary Dict, give you all the relations you might need:
+## Goal
 
-* one-to-one: `Dict`
-* many-to-one: `BiDict`
-* one-to-many: `MultiDict`
-* many-to-many: `MultiBiDict`
+This library provides bidirectional and multi-value dictionary data structures that maintain reverse mappings automatically. This fork uses `SeqDict` from `lamdera/containers` instead of the standard `Dict`, which preserves insertion order while maintaining the same API.
+
+These data structures give you all the relationship types you might need:
+
+* one-to-one: `Dict` / `SeqDict`
+* many-to-one: `BiDict` - multiple keys can map to the same value, with efficient reverse lookups
+* one-to-many: `MultiDict` - one key can map to multiple values
+* many-to-many: `MultiBiDict` - keys and values can have multiple mappings in both directions
 
 The `many-to-*` variants allow you to ask for the reverse mapping (from values to keys) - see the `getReverse` functions.
 
-There are both a `Dict`-using and an `assoc-list`-using variant for each of these. Thus, one needs `comparable` keys and values and the other can hold any types, but has slightly worse performance characteristics.
+There are both a `SeqDict`-using and an `assoc-list`-using variant for each of these. The `SeqDict` variants require `comparable` keys and values but preserve insertion order. The `Assoc` variants can hold any types but have slightly worse performance characteristics.
 
 ### Many to one - BiDict
 
