@@ -102,7 +102,7 @@ update msg dict =
             MultiDict.diff dict dict2
 
 
-msgToDictMsg : Msg -> Dict String (Set Int) -> Dict String (Set Int)
+msgToDictMsg : Msg -> SeqDict String (Set Int) -> SeqDict String (Set Int)
 msgToDictMsg msg dict =
     case msg of
         Insert k v ->
@@ -229,7 +229,7 @@ msgFuzzer =
 -- TESTS
 
 
-expectEqualToDict : Dict a (Set b) -> MultiDict a b -> Expectation
+expectEqualToDict : SeqDict a (Set b) -> MultiDict a b -> Expectation
 expectEqualToDict dict multiDict =
     MultiDict.toList multiDict
         |> Expect.equalLists (Dict.toList dict)

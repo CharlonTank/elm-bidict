@@ -16,16 +16,16 @@ Example usage:
 
     manyToMany : MultiBiDict String Int
     manyToMany =
-        MultiBiDict.empty
-            |> MultiBiDict.insert "A" 1
-            |> MultiBiDict.insert "B" 2
-            |> MultiBiDict.insert "C" 3
-            |> MultiBiDict.insert "A" 2
+        MultiBiSeqDict.empty
+            |> MultiBiSeqDict.insert "A" 1
+            |> MultiBiSeqDict.insert "B" 2
+            |> MultiBiSeqDict.insert "C" 3
+            |> MultiBiSeqDict.insert "A" 2
 
-    MultiBiDict.get "A" manyToMany
+    MultiBiSeqDict.get "A" manyToMany
     --> Set.fromList [1, 2]
 
-    MultiBiDict.getReverse 2 manyToMany
+    MultiBiSeqDict.getReverse 2 manyToMany
     --> Set.fromList ["A", "B"]
 
 
@@ -65,23 +65,23 @@ Example usage:
 
 -}
 
-import Dict exposing (Dict)
-import Dict.Extra
+import SeqDict exposing (SeqDict)
+
 import Set exposing (Set)
 
 
 {-| The underlying data structure. Think about it as
 
     type alias MultiBiDict comparable1 comparable2 =
-        { forward : Dict comparable1 (Set comparable2) -- just a normal Dict!
-        , reverse : Dict comparable2 (Set comparable1) -- the reverse mappings!
+        { forward : SeqDict comparable1 (Set comparable2) -- just a normal Dict!
+        , reverse : SeqDict comparable2 (Set comparable1) -- the reverse mappings!
         }
 
 -}
 type MultiBiDict comparable1 comparable2
     = MultiBiDict
-        { forward : Dict comparable1 (Set comparable2)
-        , reverse : Dict comparable2 (Set comparable1)
+        { forward : SeqDict comparable1 (Set comparable2)
+        , reverse : SeqDict comparable2 (Set comparable1)
         }
 
 
@@ -90,8 +90,8 @@ type MultiBiDict comparable1 comparable2
 empty : MultiBiDict comparable1 comparable2
 empty =
     MultiBiDict
-        { forward = Dict.empty
-        , reverse = Dict.empty
+        { forward = SeqDict.empty
+        , reverse = SeqDict.empty
         }
 
 
@@ -100,8 +100,8 @@ empty =
 singleton : comparable1 -> comparable2 -> MultiBiDict comparable1 comparable2
 singleton from to =
     MultiBiDict
-        { forward = Dict.singleton from (Set.singleton to)
-        , reverse = Dict.singleton to (Set.singleton from)
+        { forward = SeqDict.singleton from (Set.singleton to)
+        , reverse = SeqDict.singleton to (Set.singleton from)
         }
 
 
@@ -110,7 +110,7 @@ a collision.
 -}
 insert : comparable1 -> comparable2 -> MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2
 insert from to (MultiBiDict d) =
-    Dict.update
+    SeqDict.update
         from
         (\maybeSet ->
             case maybeSet of
@@ -128,7 +128,7 @@ insert from to (MultiBiDict d) =
 -}
 update : comparable1 -> (Set comparable2 -> Set comparable2) -> MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2
 update from fn (MultiBiDict d) =
-    Dict.update from (Maybe.andThen (normalizeSet << fn)) d.forward
+    SeqDict.update from (Maybe.andThen (normalizeSet << fn)) d.forward
         |> fromDict
 
 
@@ -151,8 +151,8 @@ removeAll : comparable1 -> MultiBiDict comparable1 comparable2 -> MultiBiDict co
 removeAll from (MultiBiDict d) =
     MultiBiDict
         { d
-            | forward = Dict.remove from d.forward
-            , reverse = Dict.Extra.filterMap (\_ set -> Set.remove from set |> normalizeSet) d.reverse
+            | forward = SeqDict.remove from d.forward
+            , reverse = SeqDict.filterMap (\_ set -> Set.remove from set |> normalizeSet) d.reverse
         }
 
 
@@ -161,7 +161,7 @@ no changes are made.
 -}
 remove : comparable1 -> comparable2 -> MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2
 remove from to (MultiBiDict d) =
-    Dict.update from (Maybe.andThen (Set.remove to >> normalizeSet)) d.forward
+    SeqDict.update from (Maybe.andThen (Set.remove to >> normalizeSet)) d.forward
         |> fromDict
 
 
@@ -172,14 +172,14 @@ remove from to (MultiBiDict d) =
 -}
 isEmpty : MultiBiDict comparable1 comparable2 -> Bool
 isEmpty (MultiBiDict d) =
-    Dict.isEmpty d.forward
+    SeqDict.isEmpty d.forward
 
 
 {-| Determine if a key is in a dictionary.
 -}
 member : comparable1 -> MultiBiDict comparable1 comparable2 -> Bool
 member from (MultiBiDict d) =
-    Dict.member from d.forward
+    SeqDict.member from d.forward
 
 
 {-| Get the value associated with a key. If the key is not found, return
@@ -195,7 +195,7 @@ dictionary.
 -}
 get : comparable1 -> MultiBiDict comparable1 comparable2 -> Set comparable2
 get from (MultiBiDict d) =
-    Dict.get from d.forward
+    SeqDict.get from d.forward
         |> Maybe.withDefault Set.empty
 
 
@@ -204,7 +204,7 @@ return an empty set.
 -}
 getReverse : comparable2 -> MultiBiDict comparable1 comparable2 -> Set comparable1
 getReverse to (MultiBiDict d) =
-    Dict.get to d.reverse
+    SeqDict.get to d.reverse
         |> Maybe.withDefault Set.empty
 
 
@@ -212,7 +212,7 @@ getReverse to (MultiBiDict d) =
 -}
 size : MultiBiDict comparable1 comparable2 -> Int
 size (MultiBiDict d) =
-    Dict.foldl (\_ set acc -> Set.size set + acc) 0 d.forward
+    SeqDict.foldl (\_ set acc -> Set.size set + acc) 0 d.forward
 
 
 {-| Get all of the keys in a dictionary, sorted from lowest to highest.
@@ -222,7 +222,7 @@ size (MultiBiDict d) =
 -}
 keys : MultiBiDict comparable1 comparable2 -> List comparable1
 keys (MultiBiDict d) =
-    Dict.keys d.forward
+    SeqDict.keys d.forward
 
 
 {-| Get all of the values in a dictionary, in the order of their keys.
@@ -232,7 +232,7 @@ keys (MultiBiDict d) =
 -}
 values : MultiBiDict comparable1 comparable2 -> List comparable2
 values (MultiBiDict d) =
-    Dict.values d.forward
+    SeqDict.values d.forward
         |> List.concatMap Set.toList
 
 
@@ -240,35 +240,35 @@ values (MultiBiDict d) =
 -}
 uniqueValues : MultiBiDict comparable1 comparable2 -> List comparable2
 uniqueValues (MultiBiDict d) =
-    Dict.keys d.reverse
+    SeqDict.keys d.reverse
 
 
 {-| Get a count of unique values in the dictionary.
 -}
 uniqueValuesCount : MultiBiDict comparable1 comparable2 -> Int
 uniqueValuesCount (MultiBiDict d) =
-    Dict.size d.reverse
+    SeqDict.size d.reverse
 
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 -}
 toList : MultiBiDict comparable1 comparable2 -> List ( comparable1, Set comparable2 )
 toList (MultiBiDict d) =
-    Dict.toList d.forward
+    SeqDict.toList d.forward
 
 
 {-| Convert a dictionary into a reverse association list of value-keys pairs.
 -}
 toReverseList : MultiBiDict comparable1 comparable2 -> List ( comparable2, Set comparable1 )
 toReverseList (MultiBiDict d) =
-    Dict.toList d.reverse
+    SeqDict.toList d.reverse
 
 
 {-| Convert an association list into a dictionary.
 -}
 fromList : List ( comparable1, Set comparable2 ) -> MultiBiDict comparable1 comparable2
 fromList list =
-    Dict.fromList list
+    SeqDict.fromList list
         |> fromDict
 
 
@@ -277,29 +277,29 @@ fromList list =
 map : (comparable1 -> comparable21 -> comparable22) -> MultiBiDict comparable1 comparable21 -> MultiBiDict comparable1 comparable22
 map fn (MultiBiDict d) =
     -- TODO diff instead of throwing away and creating from scratch?
-    Dict.map (\key set -> Set.map (fn key) set) d.forward
+    SeqDict.map (\key set -> Set.map (fn key) set) d.forward
         |> fromDict
 
 
-{-| Convert MultiBiDict into a Dict. (Throw away the reverse mapping.)
+{-| Convert MultiBiDict into a SeqDict. (Throw away the reverse mapping.)
 -}
-toDict : MultiBiDict comparable1 comparable2 -> Dict comparable1 (Set comparable2)
+toDict : MultiBiDict comparable1 comparable2 -> SeqDict comparable1 (Set comparable2)
 toDict (MultiBiDict d) =
     d.forward
 
 
-{-| Convert Dict into a MultiBiDict. (Compute the reverse mapping.)
+{-| Convert Dict into a MultiBiSeqDict. (Compute the reverse mapping.)
 -}
-fromDict : Dict comparable1 (Set comparable2) -> MultiBiDict comparable1 comparable2
+fromDict : SeqDict comparable1 (Set comparable2) -> MultiBiDict comparable1 comparable2
 fromDict forward =
     MultiBiDict
         { forward = forward
         , reverse =
-            Dict.foldl
+            SeqDict.foldl
                 (\key set acc ->
                     Set.foldl
                         (\value acc_ ->
-                            Dict.update
+                            SeqDict.update
                                 value
                                 (\maybeSet ->
                                     case maybeSet of
@@ -314,7 +314,7 @@ fromDict forward =
                         acc
                         set
                 )
-                Dict.empty
+                SeqDict.empty
                 forward
         }
 
@@ -323,7 +323,7 @@ fromDict forward =
 
 
     getAges users =
-        Dict.foldl addAge [] users
+        SeqDict.foldl addAge [] users
 
     addAge _ user ages =
         user.age :: ages
@@ -333,14 +333,14 @@ fromDict forward =
 -}
 foldl : (comparable1 -> Set comparable2 -> acc -> acc) -> acc -> MultiBiDict comparable1 comparable2 -> acc
 foldl fn zero (MultiBiDict d) =
-    Dict.foldl fn zero d.forward
+    SeqDict.foldl fn zero d.forward
 
 
 {-| Fold over the key-value pairs in a dictionary from highest key to lowest key.
 
 
     getAges users =
-        Dict.foldr addAge [] users
+        SeqDict.foldr addAge [] users
 
     addAge _ user ages =
         user.age :: ages
@@ -350,14 +350,14 @@ foldl fn zero (MultiBiDict d) =
 -}
 foldr : (comparable1 -> Set comparable2 -> acc -> acc) -> acc -> MultiBiDict comparable1 comparable2 -> acc
 foldr fn zero (MultiBiDict d) =
-    Dict.foldr fn zero d.forward
+    SeqDict.foldr fn zero d.forward
 
 
 {-| Keep only the mappings that pass the given test.
 -}
 filter : (comparable1 -> comparable2 -> Bool) -> MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2
 filter fn (MultiBiDict d) =
-    Dict.toList d.forward
+    SeqDict.toList d.forward
         |> List.filterMap
             (\( key, values_ ) ->
                 values_
@@ -377,7 +377,7 @@ partition fn (MultiBiDict d) =
     -- TODO diff instead of throwing away and creating from scratch?
     let
         ( forwardTrue, forwardFalse ) =
-            Dict.partition fn d.forward
+            SeqDict.partition fn d.forward
     in
     ( fromDict forwardTrue
     , fromDict forwardFalse
@@ -390,7 +390,7 @@ to the first dictionary.
 union : MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2
 union (MultiBiDict left) (MultiBiDict right) =
     -- TODO diff instead of throwing away and creating from scratch?
-    Dict.union left.forward right.forward
+    SeqDict.union left.forward right.forward
         |> fromDict
 
 
@@ -400,7 +400,7 @@ Preference is given to values in the first dictionary.
 intersect : MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2
 intersect (MultiBiDict left) (MultiBiDict right) =
     -- TODO diff instead of throwing away and creating from scratch?
-    Dict.intersect left.forward right.forward
+    SeqDict.intersect left.forward right.forward
         |> fromDict
 
 
@@ -409,7 +409,7 @@ intersect (MultiBiDict left) (MultiBiDict right) =
 diff : MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2 -> MultiBiDict comparable1 comparable2
 diff (MultiBiDict left) (MultiBiDict right) =
     -- TODO diff instead of throwing away and creating from scratch?
-    Dict.diff left.forward right.forward
+    SeqDict.diff left.forward right.forward
         |> fromDict
 
 
@@ -433,4 +433,4 @@ merge :
     -> acc
     -> acc
 merge fnLeft fnBoth fnRight (MultiBiDict left) (MultiBiDict right) zero =
-    Dict.merge fnLeft fnBoth fnRight left.forward right.forward zero
+    SeqDict.merge fnLeft fnBoth fnRight left.forward right.forward zero

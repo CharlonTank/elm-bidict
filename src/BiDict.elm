@@ -15,13 +15,13 @@ Example usage:
 
     manyToOne : BiDict String Int
     manyToOne =
-        BiDict.empty
-            |> BiDict.insert "A" 1
-            |> BiDict.insert "B" 2
-            |> BiDict.insert "C" 1
-            |> BiDict.insert "D" 4
+        BiSeqDict.empty
+            |> BiSeqDict.insert "A" 1
+            |> BiSeqDict.insert "B" 2
+            |> BiSeqDict.insert "C" 1
+            |> BiSeqDict.insert "D" 4
 
-    BiDict.getReverse 1 manyToOne
+    BiSeqDict.getReverse 1 manyToOne
     --> Set.fromList ["A", "C"]
 
 
@@ -61,23 +61,23 @@ Example usage:
 
 -}
 
-import Dict exposing (Dict)
-import Dict.Extra
+import SeqDict exposing (SeqDict)
+
 import Set exposing (Set)
 
 
 {-| The underlying data structure. Think about it as
 
     type alias BiDict a b =
-        { forward : Dict a b -- just a normal Dict!
-        , reverse : Dict b (Set a) -- the reverse mappings!
+        { forward : SeqDict a b -- just a normal Dict!
+        , reverse : SeqDict b (Set a) -- the reverse mappings!
         }
 
 -}
 type BiDict comparable1 comparable2
     = BiDict
-        { forward : Dict comparable1 comparable2
-        , reverse : Dict comparable2 (Set comparable1)
+        { forward : SeqDict comparable1 comparable2
+        , reverse : SeqDict comparable2 (Set comparable1)
         }
 
 
@@ -86,8 +86,8 @@ type BiDict comparable1 comparable2
 empty : BiDict comparable1 comparable2
 empty =
     BiDict
-        { forward = Dict.empty
-        , reverse = Dict.empty
+        { forward = SeqDict.empty
+        , reverse = SeqDict.empty
         }
 
 
@@ -96,8 +96,8 @@ empty =
 singleton : comparable1 -> comparable2 -> BiDict comparable1 comparable2
 singleton from to =
     BiDict
-        { forward = Dict.singleton from to
-        , reverse = Dict.singleton to (Set.singleton from)
+        { forward = SeqDict.singleton from to
+        , reverse = SeqDict.singleton to (Set.singleton from)
         }
 
 
@@ -108,11 +108,11 @@ insert : comparable1 -> comparable2 -> BiDict comparable1 comparable2 -> BiDict 
 insert from to (BiDict d) =
     BiDict
         { d
-            | forward = Dict.insert from to d.forward
+            | forward = SeqDict.insert from to d.forward
             , reverse =
                 let
                     oldTo =
-                        Dict.get from d.forward
+                        SeqDict.get from d.forward
 
                     reverseWithoutOld =
                         case oldTo of
@@ -121,13 +121,13 @@ insert from to (BiDict d) =
 
                             Just oldTo_ ->
                                 d.reverse
-                                    |> Dict.update oldTo_
+                                    |> SeqDict.update oldTo_
                                         (Maybe.map (Set.remove from)
                                             >> Maybe.andThen normalizeSet
                                         )
                 in
                 reverseWithoutOld
-                    |> Dict.update to (Maybe.withDefault Set.empty >> Set.insert from >> Just)
+                    |> SeqDict.update to (Maybe.withDefault Set.empty >> Set.insert from >> Just)
         }
 
 
@@ -135,7 +135,7 @@ insert from to (BiDict d) =
 -}
 update : comparable1 -> (Maybe comparable2 -> Maybe comparable2) -> BiDict comparable1 comparable2 -> BiDict comparable1 comparable2
 update from fn (BiDict d) =
-    Dict.update from fn d.forward
+    SeqDict.update from fn d.forward
         |> fromDict
 
 
@@ -158,8 +158,8 @@ remove : comparable1 -> BiDict comparable1 comparable2 -> BiDict comparable1 com
 remove from (BiDict d) =
     BiDict
         { d
-            | forward = Dict.remove from d.forward
-            , reverse = Dict.Extra.filterMap (\_ set -> Set.remove from set |> normalizeSet) d.reverse
+            | forward = SeqDict.remove from d.forward
+            , reverse = SeqDict.filterMap (\_ set -> Set.remove from set |> normalizeSet) d.reverse
         }
 
 
@@ -170,14 +170,14 @@ remove from (BiDict d) =
 -}
 isEmpty : BiDict comparable1 comparable2 -> Bool
 isEmpty (BiDict d) =
-    Dict.isEmpty d.forward
+    SeqDict.isEmpty d.forward
 
 
 {-| Determine if a key is in a dictionary.
 -}
 member : comparable1 -> BiDict comparable1 comparable2 -> Bool
 member from (BiDict d) =
-    Dict.member from d.forward
+    SeqDict.member from d.forward
 
 
 {-| Get the value associated with a key. If the key is not found, return
@@ -193,7 +193,7 @@ dictionary.
 -}
 get : comparable1 -> BiDict comparable1 comparable2 -> Maybe comparable2
 get from (BiDict d) =
-    Dict.get from d.forward
+    SeqDict.get from d.forward
 
 
 {-| Get the keys associated with a value. If the value is not found,
@@ -201,7 +201,7 @@ return an empty set.
 -}
 getReverse : comparable2 -> BiDict comparable1 comparable2 -> Set comparable1
 getReverse to (BiDict d) =
-    Dict.get to d.reverse
+    SeqDict.get to d.reverse
         |> Maybe.withDefault Set.empty
 
 
@@ -209,7 +209,7 @@ getReverse to (BiDict d) =
 -}
 size : BiDict comparable1 comparable2 -> Int
 size (BiDict d) =
-    Dict.size d.forward
+    SeqDict.size d.forward
 
 
 {-| Get all of the keys in a dictionary, sorted from lowest to highest.
@@ -219,7 +219,7 @@ size (BiDict d) =
 -}
 keys : BiDict comparable1 comparable2 -> List comparable1
 keys (BiDict d) =
-    Dict.keys d.forward
+    SeqDict.keys d.forward
 
 
 {-| Get all of the values in a dictionary, in the order of their keys.
@@ -229,42 +229,42 @@ keys (BiDict d) =
 -}
 values : BiDict comparable1 comparable2 -> List comparable2
 values (BiDict d) =
-    Dict.values d.forward
+    SeqDict.values d.forward
 
 
 {-| Get a list of unique values in the dictionary.
 -}
 uniqueValues : BiDict comparable1 comparable2 -> List comparable2
 uniqueValues (BiDict d) =
-    Dict.keys d.reverse
+    SeqDict.keys d.reverse
 
 
 {-| Get a count of unique values in the dictionary.
 -}
 uniqueValuesCount : BiDict comparable1 comparable2 -> Int
 uniqueValuesCount (BiDict d) =
-    Dict.size d.reverse
+    SeqDict.size d.reverse
 
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 -}
 toList : BiDict comparable1 comparable2 -> List ( comparable1, comparable2 )
 toList (BiDict d) =
-    Dict.toList d.forward
+    SeqDict.toList d.forward
 
 
 {-| Convert a dictionary into a reverse association list of value-keys pairs.
 -}
 toReverseList : BiDict comparable1 comparable2 -> List ( comparable2, Set comparable1 )
 toReverseList (BiDict d) =
-    Dict.toList d.reverse
+    SeqDict.toList d.reverse
 
 
 {-| Convert an association list into a dictionary.
 -}
 fromList : List ( comparable1, comparable2 ) -> BiDict comparable1 comparable2
 fromList list =
-    Dict.fromList list
+    SeqDict.fromList list
         |> fromDict
 
 
@@ -273,28 +273,28 @@ fromList list =
 map : (comparable1 -> comparable21 -> comparable22) -> BiDict comparable1 comparable21 -> BiDict comparable1 comparable22
 map fn (BiDict d) =
     -- TODO diff instead of throwing away and creating from scratch?
-    Dict.map fn d.forward
+    SeqDict.map fn d.forward
         |> fromDict
 
 
-{-| Convert BiDict into a Dict. (Throw away the reverse mapping.)
+{-| Convert BiDict into a SeqDict. (Throw away the reverse mapping.)
 -}
-toDict : BiDict comparable1 comparable2 -> Dict comparable1 comparable2
+toDict : BiDict comparable1 comparable2 -> SeqDict comparable1 comparable2
 toDict (BiDict d) =
     d.forward
 
 
-{-| Convert Dict into a BiDict. (Compute the reverse mapping.)
+{-| Convert Dict into a BiSeqDict. (Compute the reverse mapping.)
 -}
-fromDict : Dict comparable1 comparable2 -> BiDict comparable1 comparable2
+fromDict : SeqDict comparable1 comparable2 -> BiDict comparable1 comparable2
 fromDict forward =
     BiDict
         { forward = forward
         , reverse =
             forward
-                |> Dict.foldl
+                |> SeqDict.foldl
                     (\key value acc ->
-                        Dict.update value
+                        SeqDict.update value
                             (\maybeKeys ->
                                 Just <|
                                     case maybeKeys of
@@ -306,7 +306,7 @@ fromDict forward =
                             )
                             acc
                     )
-                    Dict.empty
+                    SeqDict.empty
         }
 
 
@@ -314,7 +314,7 @@ fromDict forward =
 
 
     getAges users =
-        Dict.foldl addAge [] users
+        SeqDict.foldl addAge [] users
 
     addAge _ user ages =
         user.age :: ages
@@ -324,14 +324,14 @@ fromDict forward =
 -}
 foldl : (comparable1 -> comparable2 -> acc -> acc) -> acc -> BiDict comparable1 comparable2 -> acc
 foldl fn zero (BiDict d) =
-    Dict.foldl fn zero d.forward
+    SeqDict.foldl fn zero d.forward
 
 
 {-| Fold over the key-value pairs in a dictionary from highest key to lowest key.
 
 
     getAges users =
-        Dict.foldr addAge [] users
+        SeqDict.foldr addAge [] users
 
     addAge _ user ages =
         user.age :: ages
@@ -341,7 +341,7 @@ foldl fn zero (BiDict d) =
 -}
 foldr : (comparable1 -> comparable2 -> acc -> acc) -> acc -> BiDict comparable1 comparable2 -> acc
 foldr fn zero (BiDict d) =
-    Dict.foldr fn zero d.forward
+    SeqDict.foldr fn zero d.forward
 
 
 {-| Keep only the key-value pairs that pass the given test.
@@ -349,7 +349,7 @@ foldr fn zero (BiDict d) =
 filter : (comparable1 -> comparable2 -> Bool) -> BiDict comparable1 comparable2 -> BiDict comparable1 comparable2
 filter fn (BiDict d) =
     -- TODO diff instead of throwing away and creating from scratch?
-    Dict.filter fn d.forward
+    SeqDict.filter fn d.forward
         |> fromDict
 
 
@@ -362,7 +362,7 @@ partition fn (BiDict d) =
     -- TODO diff instead of throwing away and creating from scratch?
     let
         ( forwardTrue, forwardFalse ) =
-            Dict.partition fn d.forward
+            SeqDict.partition fn d.forward
     in
     ( fromDict forwardTrue
     , fromDict forwardFalse
@@ -375,7 +375,7 @@ to the first dictionary.
 union : BiDict comparable1 comparable2 -> BiDict comparable1 comparable2 -> BiDict comparable1 comparable2
 union (BiDict left) (BiDict right) =
     -- TODO diff instead of throwing away and creating from scratch?
-    Dict.union left.forward right.forward
+    SeqDict.union left.forward right.forward
         |> fromDict
 
 
@@ -385,7 +385,7 @@ Preference is given to values in the first dictionary.
 intersect : BiDict comparable1 comparable2 -> BiDict comparable1 comparable2 -> BiDict comparable1 comparable2
 intersect (BiDict left) (BiDict right) =
     -- TODO diff instead of throwing away and creating from scratch?
-    Dict.intersect left.forward right.forward
+    SeqDict.intersect left.forward right.forward
         |> fromDict
 
 
@@ -394,7 +394,7 @@ intersect (BiDict left) (BiDict right) =
 diff : BiDict comparable1 comparable2 -> BiDict comparable1 comparable2 -> BiDict comparable1 comparable2
 diff (BiDict left) (BiDict right) =
     -- TODO diff instead of throwing away and creating from scratch?
-    Dict.diff left.forward right.forward
+    SeqDict.diff left.forward right.forward
         |> fromDict
 
 
@@ -418,4 +418,4 @@ merge :
     -> acc
     -> acc
 merge fnLeft fnBoth fnRight (BiDict left) (BiDict right) zero =
-    Dict.merge fnLeft fnBoth fnRight left.forward right.forward zero
+    SeqDict.merge fnLeft fnBoth fnRight left.forward right.forward zero

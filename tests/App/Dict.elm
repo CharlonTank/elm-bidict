@@ -1,7 +1,7 @@
 module App.Dict exposing (Model, Msg(..), app, update)
 
 import ArchitectureTest
-import Dict exposing (Dict)
+import SeqDict exposing (SeqDict)
 import Fuzz exposing (Fuzzer)
 import Helpers exposing (..)
 import Set exposing (Set)
@@ -134,7 +134,7 @@ keyFuzzer =
         ]
 
 
-fullDict : Dict String Int
+fullDict : SeqDict String Int
 fullDict =
     Dict.empty
         |> Dict.insert "A" 1
@@ -143,7 +143,7 @@ fullDict =
         |> Dict.insert "D" 2
 
 
-oneWayDict : Dict String Int
+oneWayDict : SeqDict String Int
 oneWayDict =
     Dict.empty
         |> Dict.insert "A" 1
@@ -152,7 +152,7 @@ oneWayDict =
         |> Dict.insert "D" 4
 
 
-otherWayDict : Dict String Int
+otherWayDict : SeqDict String Int
 otherWayDict =
     Dict.empty
         |> Dict.insert "A" 1

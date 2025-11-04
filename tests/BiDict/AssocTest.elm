@@ -88,7 +88,7 @@ update msg bidict =
             BiDict.diff bidict bidict2
 
 
-msgToDictMsg : Msg -> Dict String Int -> Dict String Int
+msgToDictMsg : Msg -> SeqDict String Int -> SeqDict String Int
 msgToDictMsg msg dict =
     case msg of
         Insert k v ->
@@ -224,7 +224,7 @@ msgFuzzer =
 -- TESTS
 
 
-expectEqualToDict : Dict a b -> BiDict a b -> Expectation
+expectEqualToDict : SeqDict a b -> BiDict a b -> Expectation
 expectEqualToDict dict bidict =
     BiDict.toList bidict
         |> Expect.equalLists (Dict.toList dict)

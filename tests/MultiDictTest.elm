@@ -5,7 +5,7 @@ import App.MultiDict
 import ArchitectureTest exposing (invariantTest, msgTest)
 import AssocList
 import AssocSet
-import Dict exposing (Dict)
+import SeqDict exposing (SeqDict)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer)
 import MultiDict exposing (MultiDict)
@@ -80,7 +80,7 @@ expectEqualToAssocMultiDict multiDict assocMultidict =
             )
 
 
-dictToMultiDict : Dict String Int -> MultiDict String Int
+dictToMultiDict : SeqDict String Int -> MultiDict String Int
 dictToMultiDict dict =
     dict
         |> Dict.toList
