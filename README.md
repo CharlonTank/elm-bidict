@@ -15,7 +15,7 @@ These data structures give you all the relationship types you might need:
 
 The `many-to-*` variants allow you to ask for the reverse mapping (from values to keys) - see the `getReverse` functions.
 
-There are both a `SeqDict`-using and an `assoc-list`-using variant for each of these. The `SeqDict` variants require `comparable` keys and values but preserve insertion order. The `Assoc` variants can hold any types but have slightly worse performance characteristics.
+There are both a `SeqDict`-using and an `assoc-list`-using variant for each of these. The `SeqDict` variants require `comparable` keys and values and preserve insertion order. The `Assoc` variants can hold any types but have slightly worse performance compared to `SeqDict`.
 
 ### Many to one - BiDict
 
